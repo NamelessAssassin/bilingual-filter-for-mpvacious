@@ -1,9 +1,13 @@
-local state = require('state')
-local utils = require('utils')
-local menu = require('menu.filter_menu')
-local processor = require('subtitle_extractor.processor')
+local utils = require('custom_filter.utils')
+local current_pkg = ...
+local require_relative = function(path)
+    return utils.require_relative(path, current_pkg)
+end
 
-local get_lang_rule = require('subtitle_extractor.language_rules').get_rule
+local state = require_relative('@ROOT.state')
+local processor = require_relative('@ROOT.subtitle_extractor')
+local menu = require_relative('@MENU.filter_menu')
+local language_rules = require_relative('@CONFIG.language_rules')
 
 local M = {}
 
@@ -34,7 +38,7 @@ M.preprocess = function(text)
         return text
     end
 
-    local check_lang = get_lang_rule(profile_mode)
+    local check_lang = language_rules.get_rule(profile_mode)
 
     -- 注入探测逻辑，并执行过滤
     processor.set_rule(check_lang)
@@ -58,6 +62,7 @@ M.init = function(config)
                 enabled = state.enabled,
                 is_profile_active = check_profile_activity(profile_mode),
                 current_profile_mode = profile_mode,
+                title_prefix = language_rules.get_title_prefix(profile_mode),
                 current_mode = state.current_mode,
                 mode_name = state.MODES[state.current_mode] or state.current_mode,
                 scores = state.scores,

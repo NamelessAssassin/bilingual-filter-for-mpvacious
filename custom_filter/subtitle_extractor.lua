@@ -1,4 +1,4 @@
-utils = require('utils')
+local utils = require('custom_filter.utils')
 
 local M = {}
 

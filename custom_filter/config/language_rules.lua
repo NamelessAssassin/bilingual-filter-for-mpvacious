@@ -1,9 +1,9 @@
-local utils = require('utils')
+local utils = require('custom_filter.utils')
 
 local M = {}
 
 -- 菜单中相应配置所对应显示的文字
-M.LANGUAGE_MAP = {
+local language_map = {
     japanese = "日文",
     korean = "韩文",
     english = "英文",
@@ -37,18 +37,19 @@ local rules = {
 }
 
 M.get_rule = function(profile_mode)
-    local mode = nil
     if profile_mode then
-        mode = profile_mode:lower()
+        profile_mode = profile_mode:lower()
     end
 
-    local selected_rule = rules[mode]
+    return rules[profile_mode] or rules["others"]
+end
 
-    if selected_rule then
-        return selected_rule
-    else
-        return rules["others"]
+M.get_title_prefix = function(language)
+    if language then
+        language = language:lower()
     end
+
+    return language_map[language] or language_map["others"]
 end
 
 return M

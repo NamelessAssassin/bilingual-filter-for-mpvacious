@@ -18,10 +18,14 @@
 ---     自动注销按键绑定，确保关闭面板后不占用任何系统快捷键
 ---
 local mp = require('mp')
-local utils = require('utils')
-local ass_styler = require('menu.ass_styler')
+local utils = require('custom_filter.utils')
 
-local LANGUAGE_MAP = require('subtitle_extractor.language_rules').LANGUAGE_MAP
+local current_pkg = ...
+local require_relative = function(path)
+    return utils.require_relative(path, current_pkg)
+end
+
+local osd = require_relative('./osd_styler')
 
 local menu = {
     active = false,
@@ -82,50 +86,48 @@ function menu:update()
     local info = self.callbacks.get_info()
 
     -- 确定状态文字和主题颜色
-    local status_prefix_text = (LANGUAGE_MAP[info.current_profile_mode] or "外文") .. "位置："
+    local status_prefix_text = info.title_prefix .. "位置："
 
-    local theme_color
+    local theme_color_func
     local status_text = ""
 
     if not info.is_profile_active then
         status_text = "当前配置不支持"
-        theme_color = ass_styler.colors.red
+        theme_color_func = osd.red
     elseif not info.enabled then
         status_text = "过滤器已关闭"
-        theme_color = ass_styler.colors.red
+        theme_color_func = osd.red
     else
         status_text = info.mode_name
-        theme_color = (info.current_mode == "AUTO") and ass_styler.colors.yellow or ass_styler.colors.green
+        theme_color_func = (info.current_mode == "AUTO") and osd.yellow or osd.green
     end
 
     status_text = status_prefix_text .. status_text
 
     -- 创建样式构建器
-    local styler = ass_styler:new()
+    local styler = osd:new()
 
-    -- 第一行：日文位置状态（整体主题色 + 粗体）
-    styler:font_size(ass_styler.font_sizes.title):color(theme_color):bold(status_text):newline()
+    -- 第一行：外文位置状态（使用 title 函数自动处理字号、粗体和颜色）
+    styler:title(status_text, theme_color_func):newline()
 
-    -- 视觉留白（空行）- 使用极小字号实现紧凑留白
-    styler:font_size(ass_styler.font_sizes.mini):append(" "):newline()
+    -- 视觉留白（空行）
+    styler:spacing("mini")
 
-    -- 第二行：识别统计（默认颜色，正常字体）
-    styler:font_size(ass_styler.font_sizes.stat):color(ass_styler.colors.white):append(string.format(
-        "识别统计：顶部 %d  底部 %d  单语 %d  (目标 %d)", info.scores.JP_TOP, info.scores.JP_BOTTOM,
-        info.scores.MONO, info.threshold)):newline()
+    -- 第二行：识别统计（使用 stat 函数自动处理字号和颜色）
+    styler:stat(string.format("识别统计：顶部 %d  底部 %d  单语 %d  (目标 %d)", info.scores.JP_TOP,
+        info.scores.JP_BOTTOM, info.scores.MONO, info.threshold)):newline()
 
     -- 分割线前留白
-    styler:font_size(ass_styler.font_sizes.micro):append(" "):newline()
+    styler:spacing("micro")
 
-    -- 绘制分割线
-    styler:font_size(ass_styler.font_sizes.hint):color(ass_styler.colors.sep):append(string.rep("—", 24)):newline()
+    -- 绘制分割线（使用 separator_line 自动处理字号、颜色和分割线）
+    styler:separator_line():newline()
 
     -- 提示行前留白
-    styler:font_size(ass_styler.font_sizes.micro):append(" "):newline()
+    styler:spacing("micro")
 
-    -- 底部提示（提示色，较小字体）
-    styler:font_size(ass_styler.font_sizes.hint):color(ass_styler.colors.hint):append(
-        "[o] 开启/关闭   [r] 重置模式   [R] 重置历史   [q/esc] 退出")
+    -- 底部提示（使用 hint_text 函数自动处理字号和颜色）
+    styler:hint_text("[o] 开启/关闭   [r] 重置模式   [R] 重置历史   [q/esc] 退出")
 
     -- 更新 OSD
     self.overlay.data = styler:build()
