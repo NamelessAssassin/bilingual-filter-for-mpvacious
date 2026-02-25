@@ -50,13 +50,9 @@ M.init = function(config)
     menu:setup({
         get_info = function()
             local profile_mode = get_current_profile_mode()
-            if profile_mode then
-                profile_mode = profile_mode:lower()
-            end
             return {
                 enabled = state.enabled,
                 is_profile_active = check_profile_activity(profile_mode),
-                current_profile_mode = profile_mode,
                 title_prefix = language_rules.get_title_prefix(profile_mode),
                 current_mode = state.current_mode,
                 mode_name = state.MODES[state.current_mode] or state.current_mode,
