@@ -1,13 +1,8 @@
 local utils = require('custom_filter.utils')
-local current_pkg = ...
-local require_relative = function(path)
-    return utils.require_relative(path, current_pkg)
-end
-
-local state = require_relative('@ROOT.state')
-local processor = require_relative('@ROOT.subtitle_extractor')
-local menu = require_relative('@MENU.filter_menu')
-local language_rules = require_relative('@CONFIG.language_rules')
+local state = require('custom_filter.state')
+local processor = require('custom_filter.subtitle_extractor')
+local menu = require('custom_filter.menu.filter_menu')
+local language_rules = require('custom_filter.config.language_rules')
 
 local M = {}
 

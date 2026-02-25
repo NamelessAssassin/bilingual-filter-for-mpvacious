@@ -19,13 +19,7 @@
 ---
 local mp = require('mp')
 local utils = require('custom_filter.utils')
-
-local current_pkg = ...
-local require_relative = function(path)
-    return utils.require_relative(path, current_pkg)
-end
-
-local osd = require_relative('./osd_styler')
+local osd = require('custom_filter.menu.osd_styler')
 
 local menu = {
     active = false,
