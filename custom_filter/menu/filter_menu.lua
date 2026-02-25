@@ -25,28 +25,39 @@ local menu = {
     active = false,
     timeout = 10,
     timer = nil,
-    overlay = mp.create_osd_overlay("ass-events")
+    overlay = mp.create_osd_overlay("ass-events"),
+
+    -- 初始化后传入
+    state = nil,
+    get_display_info = function()
+        return nil
+    end
 }
+
+function menu:init(params)
+    self.state = params.state
+    self.get_display_info = params.get_display_info
+end
 
 -- 按键绑定表
 function menu:get_bindings()
     return {{
         key = "o",
         fn = function()
-            self.callbacks.toggle()
+            self.state:toggle()
             self:update()
         end
     }, {
         key = "r",
         fn = function()
-            self.callbacks.reset()
+            self.state:reset_scores()
             self:update()
             utils.notify("字幕模式已重置")
         end
     }, {
         key = "R",
         fn = function()
-            self.callbacks.reset_all()
+            self.state:reset_all()
             self:update()
             utils.notify("历史记录已重置")
         end
@@ -68,16 +79,12 @@ function menu:get_binding_id(key)
     return "custom_filter_menu_" .. key
 end
 
-function menu:setup(callbacks)
-    self.callbacks = callbacks
-end
-
 function menu:update()
     if not self.active then
         return
     end
 
-    local info = self.callbacks.get_info()
+    local info = self.get_display_info()
 
     -- 确定状态文字和主题颜色
     local status_prefix_text = info.title_prefix .. "位置："
@@ -88,12 +95,12 @@ function menu:update()
     if not info.is_profile_active then
         status_text = "当前配置不支持"
         theme_color_func = osd.red
-    elseif not info.enabled then
+    elseif not self.state.enabled then
         status_text = "过滤器已关闭"
         theme_color_func = osd.red
     else
-        status_text = info.mode_name
-        theme_color_func = (info.current_mode == "AUTO") and osd.yellow or osd.green
+        status_text = self.state:get_current_mode_name()
+        theme_color_func = (self.state.current_mode == "AUTO") and osd.yellow or osd.green
     end
 
     status_text = status_prefix_text .. status_text
@@ -108,8 +115,8 @@ function menu:update()
     styler:spacing("mini")
 
     -- 第二行：识别统计（使用 stat 函数自动处理字号和颜色）
-    styler:stat(string.format("识别统计：顶部 %d  底部 %d  单语 %d  (目标 %d)", info.scores.JP_TOP,
-        info.scores.JP_BOTTOM, info.scores.MONO, info.threshold)):newline()
+    styler:stat(string.format("识别统计：顶部 %d  底部 %d  单语 %d  (目标 %d)", self.state.scores.JP_TOP,
+        self.state.scores.JP_BOTTOM, self.state.scores.MONO, self.state.threshold)):newline()
 
     -- 分割线前留白
     styler:spacing("micro")

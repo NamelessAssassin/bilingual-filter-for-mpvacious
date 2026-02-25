@@ -19,6 +19,14 @@ local state = {
     history = {}
 }
 
+function state:toggle()
+    self.enabled = not self.enabled
+end
+
+function state:get_current_mode_name()
+    return self.MODES[self.current_mode] or self.current_mode
+end
+
 function state:reset_scores()
     self.current_mode = "AUTO"
     self.scores.JP_TOP = 0

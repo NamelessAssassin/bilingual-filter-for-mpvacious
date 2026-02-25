@@ -15,6 +15,14 @@ local function check_profile_activity(profile_mode)
     return profile_mode ~= nil and profile_mode:lower() ~= "none"
 end
 
+local function get_display_info()
+    local profile_mode = get_current_profile_mode()
+    return {
+        is_profile_active = check_profile_activity(profile_mode),
+        title_prefix = language_rules.get_title_prefix(profile_mode)
+    }
+end
+
 -- 主过滤入口
 M.preprocess = function(text)
     -- 基础状态检查
@@ -47,28 +55,9 @@ M.init = function(config)
     end
 
     -- 初始化菜单
-    menu:setup({
-        get_info = function()
-            local profile_mode = get_current_profile_mode()
-            return {
-                enabled = state.enabled,
-                is_profile_active = check_profile_activity(profile_mode),
-                title_prefix = language_rules.get_title_prefix(profile_mode),
-                current_mode = state.current_mode,
-                mode_name = state.MODES[state.current_mode] or state.current_mode,
-                scores = state.scores,
-                threshold = state.threshold
-            }
-        end,
-        toggle = function()
-            state.enabled = not state.enabled
-        end,
-        reset = function()
-            state:reset_scores()
-        end,
-        reset_all = function()
-            state:reset_all()
-        end
+    menu:init({
+        state = state,
+        get_display_info = get_display_info
     })
 
     -------------------------------------------------------------------------------
