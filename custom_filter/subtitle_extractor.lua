@@ -54,20 +54,18 @@ function M.process(text, state, menu)
         return text
     end
 
-    -- 基于语言特征提取
-    local target_lines = {}
-    for _, line in ipairs(lines) do
-        if check_lang(line) then
-            table.insert(target_lines, line)
-        end
+    -- MONO 模式直接返回原文
+    if state.current_mode == "MONO" then
+        return text
     end
 
-    -- 回退机制：若未匹配到特征但已锁定模式，按位置提取
-    if #target_lines == 0 and state.current_mode ~= "AUTO" then
-        if state.current_mode == "TARGET_TOP" then
-            table.insert(target_lines, lines[#lines - 1])
-        elseif state.current_mode == "TARGET_BOTTOM" then
-            table.insert(target_lines, lines[#lines])
+    -- 基于语言特征和位置提取
+    local target_lines = {}
+    for i, line in ipairs(lines) do
+        if check_lang(line) -- 包含假名的行（目标语言行）必选
+        -- 目标在顶部则提取奇数行，目标在底部则提取偶数行
+        or (state.current_mode == "TARGET_TOP" and i % 2 == 1) or (state.current_mode == "TARGET_BOTTOM" and i % 2 == 0) then
+            table.insert(target_lines, line)
         end
     end
 
